@@ -13,14 +13,12 @@ Este proyecto es una API REST desarrollada con NestJS que permite a los usuarios
 - NestJS v10.0.0
 - TypeORM v0.3.17
 - MySQL2
-- Class Validator
-- Class Transformer
 
 ## Instalación
 
 1. Clonar el repositorio:
 ```bash
-git clone <url-del-repositorio>
+git clone <https://github.com/elian0826/Comentario-api.git>
 cd comments-api
 ```
 
@@ -125,5 +123,5 @@ La documentación completa de la API está disponible en Apidog:
 ## Autor
 
 Elian Altamiranda
-- GitHub: [\[@tuusuario\]](https://github.com/elian0826)
+- GitHub: https://github.com/elian0826
 
