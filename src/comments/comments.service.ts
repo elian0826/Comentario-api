@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { Video } from '../videos/entities/video.entity';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class CommentsService {
@@ -11,7 +12,9 @@ export class CommentsService {
     @InjectRepository(Comment)
     private commentsRepository: Repository<Comment>,
     @InjectRepository(Video)
-    private videoRepository: Repository<Video>
+    private videoRepository: Repository<Video>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>
   ) {}
 
   async create(createCommentDto: CreateCommentDto): Promise<Comment> {
@@ -89,27 +92,51 @@ export class CommentsService {
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.user', 'user')
       .where('comment.video_id = :videoId', { videoId })
+      .select([
+        'comment.id',
+        'comment.content',
+        'comment.video_id',
+        'comment.user_id',
+        'comment.created_at',
+        'user.id',
+        'user.username'
+      ])
       .orderBy('comment.created_at', 'DESC')
       .getMany();
 
-    console.log('Service: Comentarios encontrados:', comments);
+   
+    const commentsWithUsers = await Promise.all(
+      comments.map(async (comment) => {
+        if (!comment.user) {
+          const user = await this.userRepository.findOne({
+            where: { id: comment.user_id },
+            select: ['id', 'username']
+          });
+          return {
+            ...comment,
+            user: user || { id: comment.user_id, username: 'Usuario no encontrado' }
+          };
+        }
+        return comment;
+      })
+    );
 
     return {
       id: video.id,
       title: video.title,
       url: video.url,
       created_at: video.created_at,
-      total_comments: comments.length,
-      comments: comments.map(comment => ({
+      total_comments: commentsWithUsers.length,
+      comments: commentsWithUsers.map(comment => ({
         id: comment.id,
         content: comment.content,
         video_id: comment.video_id,
         user_id: comment.user_id,
         created_at: comment.created_at,
-        user: comment.user ? {
+        user: {
           id: comment.user.id,
           username: comment.user.username
-        } : null
+        }
       }))
     };
   }
